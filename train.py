@@ -1,20 +1,29 @@
 import json
 import pickle
-import re
+from flask import Flask, render_template, request
+import pickle, random, nltk
+from nltk.tokenize import word_tokenize
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report
 
+nltk.download("punkt")
+nltk.download("punkt_tab")
+
+app = Flask(__name__)
 factory = StemmerFactory()
 stemmer = factory.create_stemmer()
 
 def preprocess(text):
     text = text.lower()
-    text = re.sub(r"[^a-zA-Z0-9 ]", " ", text)
-    tokens = text.split()
+    tokens = word_tokenize(text)
+    tokens = [stemmer.stem(t) for t in tokens]
     return " ".join(tokens)
+
+model = pickle.load(open("model.pkl","rb"))
+vectorizer = pickle.load(open("vectorizer.pkl","rb"))
 
 
 with open("dataset.json") as f:

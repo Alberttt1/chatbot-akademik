@@ -1,19 +1,22 @@
 import random
-from flask import Flask, render_template, request
 import os, random, pickle
 import pickle
-import re
+from flask import Flask, render_template, request
+import pickle, random, nltk
+from nltk.tokenize import word_tokenize
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+nltk.download("punkt")
+nltk.download("punkt_tab")
+
 app = Flask(__name__)
-
-model = None
-vectorizer = None
-
 
 factory = StemmerFactory()
 stemmer = factory.create_stemmer()
+
+model = pickle.load(open("model.pkl","rb"))
+vectorizer = pickle.load(open("vectorizer.pkl","rb"))
 
 def load_model():
     global model, vectorizer
@@ -25,8 +28,8 @@ def load_model():
 
 def preprocess(text):
     text = text.lower()
-    text = re.sub(r"[^a-zA-Z0-9 ]", " ", text)
-    tokens = text.split()
+    tokens = word_tokenize(text)
+    tokens = [stemmer.stem(t) for t in tokens]
     return " ".join(tokens)
 responses = {
   "salam": [
@@ -176,27 +179,16 @@ button {
 
 @app.route("/", methods=["GET","POST"])
 def chat():
-    load_model()
-
-    reply = ""
     if request.method == "POST":
         msg = request.form["message"]
         clean = preprocess(msg)
         vec = vectorizer.transform([clean])
-        proba = model.predict_proba(vec)[0]
-        max_proba = max(proba)
-        pred = model.classes_[proba.argmax()]
-
-        if max_proba < 0.6:
-            reply = "Maaf, saya belum yakin dengan pertanyaan kamu."
-        elif pred in responses:
-            reply = random.choice(responses[pred])
-        else:
-            reply = "Maaf, saya belum memahami pertanyaan tersebut."
-
-        return reply
+        pred = model.predict(vec)[0]
+        return random.choice(responses[pred])
 
     return render_template("index.html")
+
+
 
 
 if __name__=="__main__":
