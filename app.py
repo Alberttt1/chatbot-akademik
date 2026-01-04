@@ -8,12 +8,20 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(__name__)
 
-model = pickle.load(open(os.path.join(BASE_DIR,"model.pkl"),"rb"))
-vectorizer = pickle.load(open(os.path.join(BASE_DIR,"vectorizer.pkl"),"rb"))
+model = None
+vectorizer = None
 
 
 factory = StemmerFactory()
 stemmer = factory.create_stemmer()
+
+def load_model():
+    global model, vectorizer
+    if model is None or vectorizer is None:
+        base = os.path.dirname(os.path.abspath(__file__))
+        model = pickle.load(open(os.path.join(base,"model.pkl"),"rb"))
+        vectorizer = pickle.load(open(os.path.join(base,"vectorizer.pkl"),"rb"))
+
 
 def preprocess(text):
     text = text.lower()
@@ -168,6 +176,8 @@ button {
 
 @app.route("/", methods=["GET","POST"])
 def chat():
+    load_model()
+
     reply = ""
     if request.method == "POST":
         msg = request.form["message"]
