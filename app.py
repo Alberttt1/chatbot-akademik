@@ -2,17 +2,9 @@ import random
 from flask import Flask, render_template, request
 import os, random, pickle
 import pickle
-import nltk
-from nltk.tokenize import word_tokenize
+import re
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-nltk.data.path.append(os.path.join(BASE_DIR, "nltk_data"))
-nltk.download("punkt", download_dir=os.path.join(BASE_DIR, "nltk_data"))
-nltk.download("punkt_tab", download_dir=os.path.join(BASE_DIR, "nltk_data"))
-
-
-nltk.download('punkt')
-nltk.download('punkt_tab')
 
 app = Flask(__name__)
 
@@ -25,10 +17,9 @@ stemmer = factory.create_stemmer()
 
 def preprocess(text):
     text = text.lower()
-    tokens = word_tokenize(text)
-    tokens = [stemmer.stem(t) for t in tokens]
+    text = re.sub(r"[^a-zA-Z0-9 ]", " ", text)
+    tokens = text.split()
     return " ".join(tokens)
-
 responses = {
   "salam": [
     "Halo! Ada yang bisa saya bantu hari ini?",
