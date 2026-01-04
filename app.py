@@ -5,14 +5,20 @@ import pickle
 import nltk
 from nltk.tokenize import word_tokenize
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+nltk.data.path.append(os.path.join(BASE_DIR, "nltk_data"))
+nltk.download("punkt", download_dir=os.path.join(BASE_DIR, "nltk_data"))
+nltk.download("punkt_tab", download_dir=os.path.join(BASE_DIR, "nltk_data"))
+
 
 nltk.download('punkt')
 nltk.download('punkt_tab')
 
 app = Flask(__name__)
 
-model = pickle.load(open("model.pkl", "rb"))
-vectorizer = pickle.load(open("vectorizer.pkl", "rb"))
+model = pickle.load(open(os.path.join(BASE_DIR,"model.pkl"),"rb"))
+vectorizer = pickle.load(open(os.path.join(BASE_DIR,"vectorizer.pkl"),"rb"))
+
 
 factory = StemmerFactory()
 stemmer = factory.create_stemmer()
