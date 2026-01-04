@@ -1,5 +1,6 @@
 import random
-from flask import Flask, request, render_template_string
+from flask import Flask, render_template, request
+import os, random, pickle
 import pickle
 import nltk
 from nltk.tokenize import word_tokenize
@@ -175,14 +176,21 @@ def chat():
         msg = request.form["message"]
         clean = preprocess(msg)
         vec = vectorizer.transform([clean])
-        pred = model.predict(vec)[0]
+        proba = model.predict_proba(vec)[0]
+        max_proba = max(proba)
+        pred = model.classes_[proba.argmax()]
 
-        if pred in responses:
+        if max_proba < 0.6:
+            reply = "Maaf, saya belum yakin dengan pertanyaan kamu."
+        elif pred in responses:
             reply = random.choice(responses[pred])
         else:
             reply = "Maaf, saya belum memahami pertanyaan tersebut."
 
-    return render_template_string(HTML,reply=reply)
+        return reply
+
+    return render_template("index.html")
+
 
 if __name__=="__main__":
     app.run(debug=True)
