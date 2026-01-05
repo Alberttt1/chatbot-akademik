@@ -2,4 +2,4 @@ flask
 nltk
 sastrawi
 scikit-learn
-gunicorn
+
