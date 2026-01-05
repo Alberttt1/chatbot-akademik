@@ -1,5 +1,3 @@
-flask
-nltk
-sastrawi
+gradio
 scikit-learn
-
+sastrawi

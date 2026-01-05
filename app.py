@@ -1,36 +1,19 @@
-import random
-import os, random, pickle
-import pickle
-from flask import Flask, render_template, request
-import pickle, random, nltk
-from nltk.tokenize import word_tokenize
+import pickle, random, re
+import gradio as gr
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-nltk.download("punkt")
-nltk.download("punkt_tab")
-
-app = Flask(__name__)
-
-factory = StemmerFactory()
-stemmer = factory.create_stemmer()
+stemmer = StemmerFactory().create_stemmer()
 
 model = pickle.load(open("model.pkl","rb"))
 vectorizer = pickle.load(open("vectorizer.pkl","rb"))
 
-def load_model():
-    global model, vectorizer
-    if model is None or vectorizer is None:
-        base = os.path.dirname(os.path.abspath(__file__))
-        model = pickle.load(open(os.path.join(base,"model.pkl"),"rb"))
-        vectorizer = pickle.load(open(os.path.join(base,"vectorizer.pkl"),"rb"))
-
-
 def preprocess(text):
     text = text.lower()
-    tokens = word_tokenize(text)
+    text = re.sub(r"[^a-z0-9 ]"," ", text)
+    tokens = text.split()
     tokens = [stemmer.stem(t) for t in tokens]
     return " ".join(tokens)
+
 responses = {
   "salam": [
     "Halo! Ada yang bisa saya bantu hari ini?",
@@ -177,17 +160,13 @@ button {
 </html>
 """
 
-@app.route("/", methods=["GET","POST"])
-def chat():
-    if request.method == "POST":
-        msg = request.form["message"]
-        clean = preprocess(msg)
-        vec = vectorizer.transform([clean])
-        pred = model.predict(vec)[0]
-        return random.choice(responses[pred])
 
-    return render_template("index.html")
+def chatbot(msg, history):
+    clean = preprocess(msg)
+    vec = vectorizer.transform([clean])
+    pred = model.predict(vec)[0]
+    reply = random.choice(responses.get(pred, ["Maaf saya belum memahami pertanyaan tersebut."]))
+    history.append((msg, reply))
+    return history, history
 
-
-if __name__=="__main__":
-    app.run(host="0.0.0.0", port=10000)
+gr.ChatInterface(chatbot, title="Chatbot Akademik Kampus").launch()
